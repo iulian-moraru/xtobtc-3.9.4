@@ -4,7 +4,6 @@ from os import environ, path
 from pathlib import Path
 from decimal import Decimal
 from bitfinex import ClientV1, ClientV2
-# from utils import initlog
 from xtobtc.utils import initlog
 
 LOG = initlog('xtobtc')
@@ -129,9 +128,8 @@ def write_to_file(action, pair, response):
     home_path = str(Path.home())
     data_path = path.join(home_path, "apps/xtobtc/data")
     alerts_file = path.join(data_path, "alerts.json")
-    LOG.info(alerts_file)
+
     if not path.exists(data_path):
-        LOG.info("created dir")
         Path(data_path).mkdir(parents=True, exist_ok=True)
 
     amount = ""
@@ -147,7 +145,7 @@ def write_to_file(action, pair, response):
         except Exception as e:
             LOG.error(e)
             return
-        LOG.info("traded")
+
     action_info = {
         "action": action,
         "pair": pair,
@@ -160,8 +158,7 @@ def write_to_file(action, pair, response):
             f.write("\n")
         except Exception as err:
             LOG.error(err)
-        else:
-            LOG.info("WROTE")
+
     f.close()
     return
 
@@ -287,7 +284,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # print(btfx_client2.wallets_balance())
-    # print(btfx_client2.submit_order("EXCHANGE MARKET", "tBTCUSD", "", "-0.0003"))
-    # print(btfx_client2.wallets_balance())
-    # print(btfx_client2.ticker("tBTCUSD"))

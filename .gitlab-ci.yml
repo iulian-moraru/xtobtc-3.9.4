@@ -50,7 +50,6 @@ install wheel:
     - echo "$SSH_QAL2_KEY" | tr -d '\r' | ssh-add -
     - echo -e "${SSH_QAL2_KEY//_/\\n}" > ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa
   script:
-#    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.8.3"
     - WHEEL=`ls dist/*.whl`
     - echo $WHEEL
     - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/xtobtc/xtobtc-3.9.4;mkdir -p dist"
