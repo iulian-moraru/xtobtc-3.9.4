@@ -1,12 +1,14 @@
 import re
-import os
+import json
+from os import environ, path
+from pathlib import Path
 from decimal import Decimal
-from xtobtc.utils import initlog
 from bitfinex import ClientV1, ClientV2
+from xtobtc.utils import initlog
 
 LOG = initlog('xtobtc')
-btfx_client1 = ClientV1(os.environ.get('API_KEY'), os.environ.get('API_SECRET'), 2.0)
-btfx_client2 = ClientV2(os.environ.get('API_KEY'), os.environ.get('API_SECRET'), 2.0)
+btfx_client1 = ClientV1(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
+btfx_client2 = ClientV2(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
 
 
 def do_margin():
@@ -29,6 +31,8 @@ def do_margin():
                     continue
                 else:
                     LOG.info(result)
+                    pair = currency_from + currency_to
+                    write_to_file("transfer", pair, m_amount)
 
 
 def remove_symbols(symbols_lst):
@@ -120,8 +124,45 @@ def check_pair(currency, pair):
             bad_match = True
     return trade, bad_match
 
+def write_to_file(action, pair, response):
+    group_path = path.dirname(path.dirname(Path(__file__).resolve().parent))
+    data_path = path.join(group_path, 'data')
+    alerts_file = path.join(data_path, 'alerts.json')
+
+    if not path.exists(data_path):
+        Path(data_path).mkdir(parents=True, exist_ok=True)
+
+    amount = ""
+    if action == "Transfer":
+        try:
+            amount = str(response[4][7])
+        except Exception as e:
+            LOG.error(e)
+            return
+    elif action == "Trade":
+        try:
+            amount = str(response[4][0][6])
+        except Exception as e:
+            LOG.error(e)
+            return
+
+    action_info = {
+        "action": action,
+        "pair": pair,
+        "amount": amount
+    }
+
+    with open(alerts_file, 'a+') as f:
+        try:
+            json.dump(action_info, f)
+            f.write("\n")
+        except Exception as err:
+            LOG.error(err)
+    f.close()
+    return
 
 def trade_currency(trade, pair, w_amount, trade_min_amt):
+    result = []
     order_symbol = "t" + pair.upper()
     if trade == "usd_sell" or trade == "btc_sell":
         if w_amount > trade_min_amt:
@@ -131,8 +172,10 @@ def trade_currency(trade, pair, w_amount, trade_min_amt):
                 result = btfx_client2.submit_order("EXCHANGE MARKET", order_symbol, "", order_amount)
             except Exception as e:
                 LOG.error(e)
+                return
             else:
                 LOG.info(result)
+                write_to_file("Trade", pair, result)
     elif trade == "btc_buy":
         try:
             last_price = btfx_client2.ticker(order_symbol)[6]
@@ -150,9 +193,10 @@ def trade_currency(trade, pair, w_amount, trade_min_amt):
                     result = btfx_client2.submit_order("EXCHANGE MARKET", order_symbol, "", order_amount)
                 except Exception as e:
                     LOG.error(e)
+                    return
                 else:
                     LOG.info(result)
-
+                    write_to_file("Trade", pair, result)
     return
 
 
@@ -238,10 +282,9 @@ def main():
     pair = "btceur"
     trade_currency("btc_buy", pair, eur_amount, btceur_min_amt)
 
-
 if __name__ == '__main__':
     main()
     # print(btfx_client2.wallets_balance())
-    # print(btfx_client2.submit_order("EXCHANGE MARKET", "tUSTUSD", "", "4"))
+    # print(btfx_client2.submit_order("EXCHANGE MARKET", "tBTCUSD", "", "-0.0005"))
     # print(btfx_client2.wallets_balance())
     # print(btfx_client2.ticker("tBTCUSD"))
