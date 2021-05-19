@@ -4,6 +4,7 @@ from os import environ, path
 from pathlib import Path
 from decimal import Decimal
 from bitfinex import ClientV1, ClientV2
+# from utils import initlog
 from xtobtc.utils import initlog
 
 LOG = initlog('xtobtc')
@@ -32,7 +33,7 @@ def do_margin():
                 else:
                     LOG.info(result)
                     pair = currency_from + currency_to
-                    write_to_file("transfer", pair, m_amount)
+                    write_to_file("Transfer", pair, m_amount)
 
 
 def remove_symbols(symbols_lst):
@@ -128,8 +129,9 @@ def write_to_file(action, pair, response):
     group_path = path.dirname(path.dirname(Path(__file__).resolve().parent))
     data_path = path.join(group_path, 'data')
     alerts_file = path.join(data_path, 'alerts.json')
-
+    LOG.info(alerts_file)
     if not path.exists(data_path):
+        LOG.info("created dir")
         Path(data_path).mkdir(parents=True, exist_ok=True)
 
     amount = ""
@@ -145,7 +147,7 @@ def write_to_file(action, pair, response):
         except Exception as e:
             LOG.error(e)
             return
-
+        LOG.info("traded")
     action_info = {
         "action": action,
         "pair": pair,
@@ -158,11 +160,12 @@ def write_to_file(action, pair, response):
             f.write("\n")
         except Exception as err:
             LOG.error(err)
+        else:
+            LOG.info("WROTE")
     f.close()
     return
 
 def trade_currency(trade, pair, w_amount, trade_min_amt):
-    result = []
     order_symbol = "t" + pair.upper()
     if trade == "usd_sell" or trade == "btc_sell":
         if w_amount > trade_min_amt:
@@ -285,6 +288,6 @@ def main():
 if __name__ == '__main__':
     main()
     # print(btfx_client2.wallets_balance())
-    # print(btfx_client2.submit_order("EXCHANGE MARKET", "tBTCUSD", "", "-0.0005"))
+    # print(btfx_client2.submit_order("EXCHANGE MARKET", "tBTCUSD", "", "-0.0003"))
     # print(btfx_client2.wallets_balance())
     # print(btfx_client2.ticker("tBTCUSD"))
