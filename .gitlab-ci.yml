@@ -56,4 +56,4 @@ install wheel:
     - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/xtobtc/xtobtc-3.9.4;mkdir -p dist"
     - scp -P 1722 -r $WHEEL $SSH_USER@$SSH_QAL2_HOST:/home/bfx/apps/xtobtc/xtobtc-3.9.4/dist
     - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/xtobtc/xtobtc-3.9.4;/home/bfx/.pyenv/versions/xtobtc-3.9.4/bin/pip install ${WHEEL}"
-    - ssh ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "sudo systemctl restart xtobtc"
+    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "sudo systemctl restart xtobtc"
