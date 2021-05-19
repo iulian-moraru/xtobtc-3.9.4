@@ -1,0 +1,59 @@
+stages:
+  - build
+  - deploy
+
+
+xtobtc wheel:
+  image: python:3.8.4-slim-buster
+  stage: build
+  script:
+    - python setup.py sdist bdist_wheel
+  artifacts:
+    paths:
+      - dist/
+
+install wheel:
+  image: python:3.8.4-buster
+  stage: deploy
+  before_script:
+    ##
+    ## Install ssh-agent if not already installed, it is required by Docker.
+    ## (change apt-get to yum if you use an RPM-based image)
+    ##
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+
+    ##
+    ## Run ssh-agent (inside the build environment)
+    ##
+    - eval $(ssh-agent -s)
+
+    ##
+    ## Create the SSH directory and give it the right permissions
+    ##
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    ##
+    ## Use ssh-keyscan to scan the keys of your private server. Replace gitlab.com
+    ## with your own domain name. You can copy and repeat that command if you have
+    ## more than one server to connect to.
+    ##
+    - echo -e "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
+    ##
+    ## Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+    ## We're using tr to fix line endings which makes ed25519 keys work
+    ## without extra base64 encoding.
+    ## https://gitlab.com/gitlab-examples/ssh-private-key/issues/1#note_48526556
+    ##
+    - echo "$SSH_QAL2_KEY" | tr -d '\r' | ssh-add -
+    - echo -e "${SSH_QAL2_KEY//_/\\n}" > ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa
+  script:
+#    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.8.3"
+    - WHEEL=`ls dist/*.whl`
+    - echo $WHEEL
+    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.9.4;mkdir -p dist"
+    - scp -P 1722 -r $WHEEL $SSH_USER@$SSH_QAL2_HOST:/home/bfx/apps/alerts-3.9.4/dist
+    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.9.4;/home/bfx/.pyenv/versions/alerts-3.9.4/bin/pip install ${WHEEL}"
+#    - ssh admin@dynamic-industry.ro "sudo systemctl restart dynbot"
