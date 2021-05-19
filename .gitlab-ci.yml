@@ -4,7 +4,7 @@ stages:
 
 
 xtobtc wheel:
-  image: python:3.8.4-slim-buster
+  image: python:3.9.4-slim-buster
   stage: build
   script:
     - python setup.py sdist bdist_wheel
@@ -13,7 +13,7 @@ xtobtc wheel:
       - dist/
 
 install wheel:
-  image: python:3.8.4-buster
+  image: python:3.9.4-buster
   stage: deploy
   before_script:
     ##
@@ -53,7 +53,7 @@ install wheel:
 #    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.8.3"
     - WHEEL=`ls dist/*.whl`
     - echo $WHEEL
-    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.9.4;mkdir -p dist"
-    - scp -P 1722 -r $WHEEL $SSH_USER@$SSH_QAL2_HOST:/home/bfx/apps/alerts-3.9.4/dist
-    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/alerts-3.9.4;/home/bfx/.pyenv/versions/alerts-3.9.4/bin/pip install ${WHEEL}"
+    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/xtobtc/xtobtc-3.9.4;mkdir -p dist"
+    - scp -P 1722 -r $WHEEL $SSH_USER@$SSH_QAL2_HOST:/home/bfx/apps/xtobtc/xtobtc-3.9.4/dist
+    - ssh $SSH_USER@$SSH_QAL2_HOST -p 1722 "cd /home/bfx/apps/xtobtc/xtobtc-3.9.4;/home/bfx/.pyenv/versions/xtobtc-3.9.4/bin/pip install ${WHEEL}"
 #    - ssh admin@dynamic-industry.ro "sudo systemctl restart dynbot"
