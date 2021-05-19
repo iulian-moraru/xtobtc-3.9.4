@@ -126,9 +126,9 @@ def check_pair(currency, pair):
     return trade, bad_match
 
 def write_to_file(action, pair, response):
-    group_path = path.dirname(path.dirname(Path(__file__).resolve().parent))
-    data_path = path.join(group_path, 'data')
-    alerts_file = path.join(data_path, 'alerts.json')
+    home_path = str(Path.home())
+    data_path = path.join(home_path, "apps/xtobtc/data")
+    alerts_file = path.join(data_path, "alerts.json")
     LOG.info(alerts_file)
     if not path.exists(data_path):
         LOG.info("created dir")
