@@ -18,8 +18,8 @@ def do_margin():
         if x[1]:
             currency_from = x[1]
             currency_to = x[1][0:3]
-            if x[2] and Decimal(format(x[2], '.5f')) > 0:
-                m_amount = str(Decimal(format(x[2], '.5f')))
+            if x[2] and Decimal(format(x[2], ".8f")) > 0:
+                m_amount = str(Decimal(format(x[2], ".8f")))
                 try:
                     result = btfx_client2.transfer_between_wallets("margin",
                                                                    "exchange",
@@ -32,7 +32,7 @@ def do_margin():
                 else:
                     LOG.info(result)
                     pair = currency_from + currency_to
-                    write_to_file("Transfer", pair, currency_from, currency_to, Decimal(format(x[2], '.5f')), result)
+                    write_to_file("Transfer", pair, currency_from, currency_to, Decimal(format(x[2], ".8f")), result)
 
 
 def remove_symbols(symbols_lst):
@@ -138,7 +138,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
         msg = f"Transfer from margin {amount} {currency_from} to {currency_to}"
     elif action == "Trade":
         try:
-            trade_amount = Decimal(format(response[4][0][6], ".5f"))
+            trade_amount = Decimal(format(response[4][0][6], ".8f"))
         except Exception as e:
             LOG.error(e)
             return msg
@@ -146,17 +146,17 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
 
         if "-" in str_amount:
             try:
-                price = Decimal(format(response[4][0][16], ".5f"))
+                price = Decimal(format(response[4][0][16], ".8f"))
             except Exception as e:
                 LOG.error(e)
                 return msg
-            amount = abs(Decimal(format(price * trade_amount, ".5f")))
+            amount = abs(Decimal(format(price * trade_amount, ".8f")))
             msg = f"Sold: {abs(trade_amount)} {currency_from} @ {price} {currency_to}",  \
                   f"got {abs(amount)} {currency_to}"
         else:
             price = w_amount / response[4][0][16]
-            price_5f = Decimal(format(price, ".5f"))
-            amount = Decimal(format(w_amount, ".5f"))
+            price_5f = Decimal(format(price, ".8f"))
+            amount = Decimal(format(w_amount, ".8f"))
             msg = f"Bought: {amount} {currency_from} @ {price_5f} {currency_to}, got {trade_amount} {currency_to}"
     elif action == "Final":
         msg = f"Current BTC balance is {w_amount}"
@@ -258,7 +258,7 @@ def main():
         if currency == "btc" or currency == "usd":
             continue
 
-        w_amount = Decimal(format(currency_inf[2], '.5f'))
+        w_amount = Decimal(format(currency_inf[2], ".8f"))
 
         for pair_inf in symbols_lst_final:
             if currency not in pair_inf["pair"]:
@@ -274,7 +274,7 @@ def main():
             if bad_match:
                 continue
 
-            trade_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
+            trade_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), ".8f"))
             trade_currency(trade, pair, w_amount, trade_min_amt, currency, currency_to)
 
     # Finally. Buy BTC with USD or EUR
@@ -287,13 +287,13 @@ def main():
     usd_amount = 0
     for curr_inf in wallet_inf:
         if curr_inf[1] == "USD":
-            usd_amount = Decimal(format(curr_inf[2], '.5f'))
+            usd_amount = Decimal(format(curr_inf[2], ".8f"))
             break
 
     btcusd_min_amt = 0
     for pair_inf in symbols_lst_final:
         if pair_inf["pair"] == "btcusd":
-            btcusd_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
+            btcusd_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), ".8f"))
             break
     pair = "btcusd"
     trade_currency("btc_buy", pair, usd_amount, btcusd_min_amt, "usd", "btc")
@@ -301,13 +301,13 @@ def main():
     eur_amount = 0
     for curr_inf in wallet_inf:
         if curr_inf[1] == "EUR":
-            eur_amount = Decimal(format(curr_inf[2], '.5f'))
+            eur_amount = Decimal(format(curr_inf[2], ".8f"))
             break
 
     btceur_min_amt = 0
     for pair_inf in symbols_lst_final:
         if pair_inf["pair"] == "btcusd":
-            btceur_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
+            btceur_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), ".8f"))
             break
     pair = "btceur"
     trade_currency("btc_buy", pair, eur_amount, btceur_min_amt, "eur", "btc")
