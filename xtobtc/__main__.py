@@ -32,7 +32,7 @@ def do_margin():
                 else:
                     LOG.info(result)
                     pair = currency_from + currency_to
-                    write_to_file("Transfer", pair, m_amount)
+                    write_to_file("Transfer", pair, currency_from, currency_to, Decimal(format(x[2], '.5f')), result)
 
 
 def remove_symbols(symbols_lst):
@@ -89,22 +89,24 @@ def check_pair(currency, pair):
     matches = re.search(regex, pair)
     trade = "usd_sell"
     bad_match = False
-
+    currency_to = ""
     if matches:
         if ":" in pair:
             pair_split = pair.split(":")
             if pair_split[0] != currency:
                 bad_match = True
-                return trade, bad_match
+                return trade, bad_match, currency_to
             else:
                 right_currency = pair.split(currency+":")[1]
         else:
             right_currency = pair.split(currency)[1]
 
         if right_currency == "btc":
+            currency_to = right_currency
             trade = "btc_sell"
         elif right_currency == "usd":
-            return trade, bad_match
+            currency_to = right_currency
+            return trade, bad_match, currency_to
         else:
             bad_match = True
     else:
@@ -117,14 +119,51 @@ def check_pair(currency, pair):
                 left_currency = pair.split(currency)[0]
 
             if left_currency == "btc":
+                currency_to = left_currency
                 trade = "btc_buy"
             else:
                 bad_match = True
         else:
             bad_match = True
-    return trade, bad_match
+    return trade, bad_match, currency_to
 
-def write_to_file(action, pair, response):
+def create_msg(action, currency_from, currency_to, w_amount, response):
+    msg = ""
+    if action == "Transfer":
+        try:
+            amount = str(response[4][7])
+        except Exception as e:
+            LOG.error(e)
+            return msg
+        msg = f"Transfer from margin {amount} {currency_from} to {currency_to}"
+    elif action == "Trade":
+        try:
+            trade_amount = Decimal(format(response[4][0][6], ".5f"))
+        except Exception as e:
+            LOG.error(e)
+            return msg
+        str_amount = str(trade_amount)
+
+        if "-" in str_amount:
+            try:
+                price = Decimal(format(response[4][0][16], ".5f"))
+            except Exception as e:
+                LOG.error(e)
+                return msg
+            amount = abs(Decimal(format(price * trade_amount, ".5f")))
+            msg = f"Sold: {abs(trade_amount)} {currency_from} @ {price} {currency_to}",  \
+                  f"got {abs(amount)} {currency_to}"
+        else:
+            price = w_amount / response[4][0][16]
+            price_5f = Decimal(format(price, ".5f"))
+            amount = Decimal(format(w_amount, ".5f"))
+            msg = f"Bought: {amount} {currency_from} @ {price_5f} {currency_to}, got {trade_amount} {currency_to}"
+    elif action == "Final":
+        msg = f"Current BTC balance is {w_amount}"
+    return msg
+
+
+def write_to_file(action, pair, currency_from, currency_to, w_amount, response):
     home_path = str(Path.home())
     data_path = path.join(home_path, "apps/xtobtc/data")
     alerts_file = path.join(data_path, "alerts.json")
@@ -132,24 +171,15 @@ def write_to_file(action, pair, response):
     if not path.exists(data_path):
         Path(data_path).mkdir(parents=True, exist_ok=True)
 
-    amount = ""
-    if action == "Transfer":
-        try:
-            amount = str(response[4][7])
-        except Exception as e:
-            LOG.error(e)
-            return
-    elif action == "Trade":
-        try:
-            amount = str(response[4][0][6])
-        except Exception as e:
-            LOG.error(e)
-            return
+    msg = create_msg(action, currency_from, currency_to, w_amount, response)
+
+    if not msg:
+        return
 
     action_info = {
         "action": action,
         "pair": pair,
-        "amount": amount
+        "details": msg
     }
 
     with open(alerts_file, 'a+') as f:
@@ -162,7 +192,7 @@ def write_to_file(action, pair, response):
     f.close()
     return
 
-def trade_currency(trade, pair, w_amount, trade_min_amt):
+def trade_currency(trade, pair, w_amount, trade_min_amt, currency_from, currency_to):
     order_symbol = "t" + pair.upper()
     if trade == "usd_sell" or trade == "btc_sell":
         if w_amount > trade_min_amt:
@@ -175,7 +205,7 @@ def trade_currency(trade, pair, w_amount, trade_min_amt):
                 return
             else:
                 LOG.info(result)
-                write_to_file("Trade", pair, result)
+                write_to_file("Trade", pair, currency_from, currency_to, last_amt_order, result)
     elif trade == "btc_buy":
         try:
             last_price = btfx_client2.ticker(order_symbol)[6]
@@ -196,7 +226,7 @@ def trade_currency(trade, pair, w_amount, trade_min_amt):
                     return
                 else:
                     LOG.info(result)
-                    write_to_file("Trade", pair, result)
+                    write_to_file("Trade", pair, currency_from, currency_to, last_amt_order, result)
     return
 
 
@@ -239,13 +269,13 @@ def main():
                 continue
 
             pair = pair_inf["pair"]
-            trade, bad_match = check_pair(currency, pair)
+            trade, bad_match, currency_to = check_pair(currency, pair)
 
             if bad_match:
                 continue
 
             trade_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
-            trade_currency(trade, pair, w_amount, trade_min_amt)
+            trade_currency(trade, pair, w_amount, trade_min_amt, currency, currency_to)
 
     # Finally. Buy BTC with USD or EUR
     try:
@@ -266,7 +296,7 @@ def main():
             btcusd_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
             break
     pair = "btcusd"
-    trade_currency("btc_buy", pair, usd_amount, btcusd_min_amt)
+    trade_currency("btc_buy", pair, usd_amount, btcusd_min_amt, "usd", "btc")
 
     eur_amount = 0
     for curr_inf in wallet_inf:
@@ -280,7 +310,20 @@ def main():
             btceur_min_amt = Decimal(format(float(pair_inf["minimum_order_size"]), '.5f'))
             break
     pair = "btceur"
-    trade_currency("btc_buy", pair, eur_amount, btceur_min_amt)
+    trade_currency("btc_buy", pair, eur_amount, btceur_min_amt, "eur", "btc")
+
+    # Get final BTC ballance
+    try:
+        wallet = btfx_client2.wallets_balance()
+    except Exception as e:
+        LOG.error(e)
+        return
+
+    for curr_inf in wallet:
+        if curr_inf[1] == "BTC":
+            btc_amount = Decimal(format(curr_inf[2], '.8f'))
+            write_to_file("Final", "", "", "", btc_amount, "")
+            break
 
 if __name__ == '__main__':
     main()

@@ -140,4 +140,4 @@ dmypy.json
 
 /xtobtc/logs/
 # .gitlab-ci.yml
-to_do.txt
+TODO.txt
