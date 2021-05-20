@@ -151,8 +151,9 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
                 LOG.error(e)
                 return msg
             amount = abs(Decimal(format(price * trade_amount, ".8f")))
-            msg = f"Sold: {abs(trade_amount)} {currency_from} @ {price} {currency_to}",  \
+            msg = f"Sold: {abs(trade_amount)} {currency_from} @ {price} {currency_to}, " \
                   f"got {abs(amount)} {currency_to}"
+            msg = "".join(msg)
         else:
             price = w_amount / response[4][0][16]
             price_5f = Decimal(format(price, ".8f"))
