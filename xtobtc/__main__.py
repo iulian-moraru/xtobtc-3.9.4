@@ -127,6 +127,7 @@ def check_pair(currency, pair):
             bad_match = True
     return trade, bad_match, currency_to
 
+
 def create_msg(action, currency_from, currency_to, w_amount, response):
     msg = ""
     if action == "Transfer":
@@ -151,14 +152,13 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
                 LOG.error(e)
                 return msg
             amount = abs(Decimal(format(price * trade_amount, ".8f")))
-            msg = f"Sold: {abs(trade_amount)} {currency_from} @ {price} {currency_to}, " \
+            msg = f"Sell: {abs(trade_amount)} {currency_from} @ {price} {currency_to}, " \
                   f"got {abs(amount)} {currency_to}"
             msg = "".join(msg)
         else:
             price = w_amount / response[4][0][16]
             price_5f = Decimal(format(price, ".8f"))
-            amount = Decimal(format(w_amount, ".8f"))
-            msg = f"Bought: {amount} {currency_from} @ {price_5f} {currency_to}, got {trade_amount} {currency_to}"
+            msg = f"Buy: {trade_amount} {currency_to} @ {price_5f} {currency_from}"
     elif action == "Final":
         msg = f"Current BTC balance is {w_amount}"
     return msg
@@ -192,6 +192,7 @@ def write_to_file(action, pair, currency_from, currency_to, w_amount, response):
 
     f.close()
     return
+
 
 def trade_currency(trade, pair, w_amount, trade_min_amt, currency_from, currency_to):
     order_symbol = "t" + pair.upper()
