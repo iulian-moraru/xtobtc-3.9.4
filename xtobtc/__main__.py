@@ -1,5 +1,6 @@
 import re
 import json
+import pkg_resources
 from os import environ, path
 from pathlib import Path
 from decimal import Decimal
@@ -9,6 +10,9 @@ from xtobtc.utils import initlog
 LOG = initlog('xtobtc')
 btfx_client1 = ClientV1(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
 btfx_client2 = ClientV2(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
+
+VERSION = pkg_resources.require("xtobtc")[0].version
+LOG.info(f"loaded app version {VERSION}")
 
 
 def do_margin():
@@ -233,6 +237,8 @@ def trade_currency(trade, pair, w_amount, trade_min_amt, currency_from, currency
 
 
 def main():
+    LOG.info("Started xtobtc V")
+
     # Transfer from margin to exchange
     do_margin()
 
@@ -324,8 +330,10 @@ def main():
     for curr_inf in wallet:
         if curr_inf[1] == "BTC":
             btc_amount = Decimal(format(curr_inf[2], '.8f'))
+            LOG.info(f"Current BTC balance is {btc_amount}")
             write_to_file("Final", "", "", "", btc_amount, "")
             break
+
 
 if __name__ == '__main__':
     main()
