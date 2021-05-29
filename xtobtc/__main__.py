@@ -7,6 +7,7 @@ from decimal import Decimal
 from bitfinex import ClientV1, ClientV2
 from xtobtc.utils import initlog
 
+
 LOG = initlog('xtobtc')
 btfx_client1 = ClientV1(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
 btfx_client2 = ClientV2(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
@@ -160,9 +161,8 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
                   f"got {abs(amount)} {currency_to}"
             msg = "".join(msg)
         else:
-            price = w_amount / response[4][0][16]
-            price_5f = Decimal(format(price, ".8f"))
-            msg = f"Buy: {trade_amount} {currency_to} @ {price_5f} {currency_from}"
+            price = Decimal(format(response[4][0][16], ".8f"))
+            msg = f"Buy: {trade_amount} {currency_to} @ {price} {currency_from}. Total {currency_from} value {w_amount}"
     elif action == "Final":
         msg = f"Current BTC balance is {w_amount}"
     return msg
