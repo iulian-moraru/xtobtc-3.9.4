@@ -149,22 +149,31 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             LOG.error(e)
             return msg
         str_amount = str(trade_amount)
+        trd_amount = abs(trade_amount)
+        trd_amt_frmt = "%.8f" % trd_amount
+
+        try:
+            price = Decimal(format(response[4][0][16], ".8f"))
+        except Exception as e:
+            LOG.error(e)
+            return msg
+
+        price_frmt = "%.8f" % price
 
         if "-" in str_amount:
-            try:
-                price = Decimal(format(response[4][0][16], ".8f"))
-            except Exception as e:
-                LOG.error(e)
-                return msg
-            amount = abs(Decimal(format(price * trade_amount, ".8f")))
-            msg = f"Sell: {abs(trade_amount)} {currency_from} @ {price} {currency_to}, " \
-                  f"got {abs(amount)} {currency_to}"
+            amt = abs(price * trade_amount)
+
+            amount = "%.8f" % amt
+            msg = f"Sell: {trd_amt_frmt} {currency_from} @ {price_frmt} {currency_to}, " \
+                  f"got {amount} {currency_to}"
             msg = "".join(msg)
         else:
-            price = Decimal(format(response[4][0][16], ".8f"))
-            msg = f"Buy: {trade_amount} {currency_to} @ {price} {currency_from}. Total {currency_from} value {w_amount}"
+            msg = f"Buy: {trade_amount} {currency_to} @ {price_frmt} {currency_from}." \
+                  f"Total {currency_from} value {w_amount}"
+            msg = "".join(msg)
     elif action == "Final":
-        msg = f"Current BTC balance is {w_amount}"
+        btc_amount = "%.8f" % w_amount
+        msg = f"Current BTC balance is {btc_amount}"
     return msg
 
 
@@ -237,7 +246,7 @@ def trade_currency(trade, pair, w_amount, trade_min_amt, currency_from, currency
 
 
 def main():
-    LOG.info("Started xtobtc V")
+    LOG.info("Started xtobtc")
 
     # Transfer from margin to exchange
     do_margin()
