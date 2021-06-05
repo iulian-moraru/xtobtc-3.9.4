@@ -181,8 +181,13 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
                   f"got {amount} {currency_to}"
             msg = "".join(msg)
         else:
-            msg = f"Buy: {trade_amount} {currency_to} @ {price_frmt} {currency_from}." \
-                  f"Total {currency_from} value {w_amount}"
+            if w_amount == int(w_amount):
+                w_amount_frmt = w_amount
+            else:
+                w_amount_frmt = format(w_amount, ".8f")
+
+            msg = f"Buy: {trd_amt_frmt} {currency_to} @ {price_frmt} {currency_from}." \
+                  f"Total {currency_from} value {w_amount_frmt}"
             msg = "".join(msg)
     elif action == "Final":
         if w_amount == int(w_amount):
@@ -191,6 +196,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             btc_amount = "%.8f" % w_amount
 
         msg = f"Current BTC balance is {btc_amount}"
+
     return msg
 
 
