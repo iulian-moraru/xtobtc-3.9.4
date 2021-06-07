@@ -179,7 +179,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             msg = "".join(msg)
         else:
             if w_amount == int(w_amount):
-                w_amount_frmt = w_amount
+                w_amount_frmt = int(w_amount)
             else:
                 w_amount_frmt = format(w_amount, ".8f")
 
@@ -188,7 +188,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             msg = "".join(msg)
     elif action == "Final":
         if w_amount == int(w_amount):
-            btc_amount = w_amount
+            btc_amount = int(w_amount)
         else:
             btc_amount = "%.8f" % w_amount
 
