@@ -149,11 +149,11 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             LOG.error(e)
             return msg
         str_amount = str(trade_amount)
-
-        if trade_amount == int(trade_amount):
-            trd_amt_frmt = trade_amount
+        trade_amt = abs(trade_amount)
+        if trade_amount == int(trade_amt):
+            trd_amt_frmt = int(trade_amt)
         else:
-            trd_amt_frmt = format(trade_amount, ".8f")
+            trd_amt_frmt = format(trade_amt, ".8f")
 
         try:
             price = Decimal(format(response[4][0][16], ".8f"))
@@ -162,7 +162,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             return msg
 
         if price == int(price):
-            price_frmt = price
+            price_frmt = int(price)
         else:
             price_frmt = format(price, ".8f")
 
@@ -170,7 +170,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             amt = abs(price * trade_amount)
 
             if amt == int(amt):
-                amount = amt
+                amount = int(amt)
             else:
                 amount = format(amt, ".8f")
 
