@@ -174,8 +174,8 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             else:
                 amount = format(amt, ".8f")
 
-            msg = f"Sell: {trd_amt_frmt} {currency_from} @ {price_frmt} {currency_to}, " \
-                  f"got {amount} {currency_to}"
+            msg = f"Sell: {trd_amt_frmt} {currency_from.upper()} @ {price_frmt} {currency_to.upper()}, " \
+                  f"got {amount} {currency_to.upper()}"
             msg = "".join(msg)
         else:
             if w_amount == int(w_amount):
@@ -183,8 +183,8 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
             else:
                 w_amount_frmt = format(w_amount, ".8f")
 
-            msg = f"Buy: {trd_amt_frmt} {currency_to} @ {price_frmt} {currency_from}." \
-                  f"Total {currency_from} value {w_amount_frmt}"
+            msg = f"Buy: {trd_amt_frmt} {currency_to.upper()} @ {price_frmt} {currency_from.upper()}." \
+                  f"Total {currency_from.upper()} value {w_amount_frmt}"
             msg = "".join(msg)
     elif action == "Final":
         if w_amount == int(w_amount):
