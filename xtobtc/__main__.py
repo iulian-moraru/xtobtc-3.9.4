@@ -212,7 +212,7 @@ def write_to_file(action, pair, currency_from, currency_to, w_amount, response):
 
     action_info = {
         "action": action,
-        "pair": pair,
+        "pair": pair.upper(),
         "details": msg
     }
 
