@@ -24,7 +24,7 @@ def do_margin():
             currency_from = x[1]
             currency_to = x[1][0:3]
             if x[2] and Decimal(format(x[2], ".8f")) > 0:
-                m_amount = str(Decimal(format(x[2], ".8f")))
+                m_amount = format(x[2], ".8f")
                 try:
                     result = btfx_client2.transfer_between_wallets("margin",
                                                                    "exchange",
@@ -37,7 +37,7 @@ def do_margin():
                 else:
                     LOG.info(result)
                     pair = currency_from + currency_to
-                    write_to_file("Transfer", pair, currency_from, currency_to, Decimal(format(x[2], ".8f")), result)
+                    write_to_file("Transfer", pair, currency_from, currency_to, format(x[2], ".8f"), result)
 
 
 def remove_symbols(symbols_lst):
