@@ -4,9 +4,9 @@ import pkg_resources
 from os import environ, path
 from pathlib import Path
 from decimal import Decimal
+from time import sleep
 from bitfinex import ClientV1, ClientV2
 from xtobtc.utils import initlog
-
 
 LOG = initlog('xtobtc')
 btfx_client1 = ClientV1(environ.get('API_KEY'), environ.get('API_SECRET'), 2.0)
@@ -19,12 +19,15 @@ LOG.info(f"Loaded app version {VERSION}")
 def do_margin():
     wallet_lst = btfx_client2.wallets_balance()
     margin_lst = [x for x in wallet_lst if x[0] == 'margin']
+    action_lines = []
     for x in margin_lst:
         if x[1]:
             currency_from = x[1]
             currency_to = x[1][0:3]
+
             if x[2] and Decimal(format(x[2], ".8f")) > 0:
                 m_amount = format(x[2], ".8f")
+
                 try:
                     result = btfx_client2.transfer_between_wallets("margin",
                                                                    "exchange",
@@ -37,7 +40,17 @@ def do_margin():
                 else:
                     LOG.info(result)
                     pair = currency_from + currency_to
-                    write_to_file("Transfer", pair, currency_from, currency_to, format(x[2], ".8f"), result)
+
+                    inf_lst = ["Transfer", pair, currency_from, currency_to, Decimal(format(x[2], ".8f")), result]
+                    action_lines.append(inf_lst)
+
+                    if x[1] != margin_lst[-1][1]:
+                        sleep(30)
+                    # write_to_file("Transfer", pair, currency_from, currency_to, Decimal(format(x[2], ".8f")), result)
+
+    if action_lines:
+        for act in action_lines:
+            write_to_file(act[0], act[1], act[2], act[3], act[4], act[5])
 
 
 def remove_symbols(symbols_lst):
@@ -102,7 +115,7 @@ def check_pair(currency, pair):
                 bad_match = True
                 return trade, bad_match, currency_to
             else:
-                right_currency = pair.split(currency+":")[1]
+                right_currency = pair.split(currency + ":")[1]
         else:
             right_currency = pair.split(currency)[1]
 
@@ -137,7 +150,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
     msg = ""
     if action == "Transfer":
         try:
-            amount = str(response[4][7])
+            amount = Decimal(format(response[4][7], ".8f"))
         except Exception as e:
             LOG.error(e)
             return msg
@@ -211,8 +224,8 @@ def write_to_file(action, pair, currency_from, currency_to, w_amount, response):
         return
 
     action_info = {
-        "action": action,
-        "pair": pair.upper(),
+        "action" : action,
+        "pair"   : pair.upper(),
         "details": msg
     }
 
@@ -267,7 +280,6 @@ def trade_currency(trade, pair, w_amount, trade_min_amt, currency_from, currency
 
 
 def final_trades(symbols_lst_final):
-
     def get_inf(wallet_info, symb_lst_final, currency, pair):
         curr_amt = 0
         min_amt = 0
@@ -368,4 +380,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
