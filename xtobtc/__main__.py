@@ -41,7 +41,7 @@ def do_margin():
                     LOG.info(result)
                     pair = currency_from + currency_to
 
-                    inf_lst = ["Transfer", pair, currency_from, currency_to, Decimal(format(x[2], ".8f")), result]
+                    inf_lst = ["Transfer", pair, currency_from, currency_to, format(x[2], ".8f"), result]
                     action_lines.append(inf_lst)
 
                     if x[1] != margin_lst[-1][1]:
