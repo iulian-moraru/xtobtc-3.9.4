@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
 
-VERSION = "1.1.21"
+VERSION = "1.1.22"
 
 # Runtime dependencies. See requirements.txt for development dependencies.
 DEPENDENCIES = [

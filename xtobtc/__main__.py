@@ -41,7 +41,7 @@ def do_margin():
                     LOG.info(result)
                     pair = currency_from + currency_to
 
-                    inf_lst = ["Transfer", pair, currency_from, currency_to, format(x[2], ".8f"), result]
+                    inf_lst = ["Transfer", pair, currency_from, currency_to, Decimal(m_amount), result]
                     action_lines.append(inf_lst)
 
                     if x[1] != margin_lst[-1][1]:
@@ -150,7 +150,7 @@ def create_msg(action, currency_from, currency_to, w_amount, response):
     msg = ""
     if action == "Transfer":
         try:
-            amount = Decimal(format(response[4][7], ".8f"))
+            amount = format(response[4][7], ".8f")
         except Exception as e:
             LOG.error(e)
             return msg
